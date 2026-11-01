@@ -1,0 +1,5 @@
+# Block direct browser access to the search log file
+<Files "searches.json">
+    Order allow,deny
+    Deny from all
+</Files>

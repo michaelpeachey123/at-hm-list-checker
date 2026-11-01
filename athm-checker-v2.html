@@ -617,7 +617,16 @@ input.addEventListener('input', function() {
     return;
   }
   debounceTimer = setTimeout(() => {
-    render(search(val));
+    const results = search(val);
+    render(results);
+    // Log search term and whether it found anything (fire-and-forget)
+    try {
+      fetch('log-search.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ term: val.trim().toLowerCase(), matched: results.length > 0 })
+      }).catch(() => {});
+    } catch(e) {}
   }, 180);
 });
 
