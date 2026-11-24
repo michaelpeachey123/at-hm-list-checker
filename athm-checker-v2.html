@@ -554,10 +554,7 @@ function search(query) {
   const exclMatches = exclusionSearch(query);
   const exclResults = exclMatches.map(label => ({ exclusion: true, label }));
 
-  // If the query matched an exclusion, suppress regular results entirely
-  if (exclResults.length > 0) return { items: [], exclusions: exclResults };
-
-  return { items: results.slice(0, 50), exclusions: [] };
+  return { items: results.slice(0, 50), exclusions: exclResults };
 }
 
 function prescClass(p) {
