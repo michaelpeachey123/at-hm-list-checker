@@ -472,9 +472,13 @@ function synonymSearch(query) {
     const synNorm = norm(syn);
     const synSing = normSingular(syn);
     // Match if query equals synonym (plural-insensitive), or query words all appear in synonym
+    const qWords = q.split(' ').filter(w => w.length > 1);
+    const synWords = synNorm.split(' ');
+    // Require query to equal the synonym, start with it, or contain ALL synonym words
+    // (i.e. query is at least as specific as the synonym — never a subset of it)
     const isMatch = synNorm === q || synSing === q || synNorm === qSing || synSing === qSing
       || synNorm.startsWith(q) || synNorm.startsWith(qSing)
-      || q.split(' ').filter(w => w.length > 1).every(w => synNorm.includes(w));
+      || (qWords.length >= synWords.length && synWords.every(w => qWords.includes(w)));
     if (isMatch) {
       for (const target of targets) {
         hits.push({ synonym: syn, target: target.toLowerCase() });
