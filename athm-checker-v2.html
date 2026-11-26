@@ -349,7 +349,7 @@
   <div class="header-inner">
     <div class="header-brand">SA Homecare Therapies</div>
     <div class="header-title">AT-HM List Checker</div>
-    <div class="header-sub">Support at Home · AT-HM Scheme · Updated 17 July 2026</div>
+    <div class="header-sub">Support at Home · AT-HM Scheme · Updated 17 July 2026 · v26Nov</div>
   </div>
 </header>
 
@@ -678,6 +678,7 @@ function render(results) {
 
   const typeLabel = { exact: 'Exact match', close: 'Close match', synonym: 'Synonym match', broad: 'Broad match', confirmed: 'Confirmed match' };
 
+  try {
   container.innerHTML = exclHtml + items.map((r, i) => {
     const { item, matchType, icon, synonymUsed } = r;
     const condFlag = item.condition ? '⚠️' : '';
@@ -724,6 +725,10 @@ function render(results) {
   </div>
 </div>`;
   }).join('');
+  } catch(e) {
+    count.textContent = 'Error rendering results: ' + e.message;
+    container.innerHTML = '<p style="color:red;padding:16px;">Render error: ' + e.message + '</p>';
+  }
 }
 
 function toggleCard(i) {
