@@ -513,14 +513,26 @@ function search(query) {
   const results = [];
   const seen = new Set();
 
-  // Direct scoring against items
-  for (const item of ITEMS) {
-    const s = score(query, item);
-    if (s && s.score >= 40) {
-      const key = item.item + '|' + item.section;
-      if (!seen.has(key)) {
-        seen.add(key);
-        results.push({ item, score: s.score, matchType: s.type, icon: s.icon, synonymUsed: null });
+  // If the query is an exact synonym match, skip direct item scoring entirely —
+  // this prevents partial word matches (e.g. "safe" matching "safety") from
+  // polluting results when the user typed a known synonym like "key safe".
+  const qNorm = norm(query);
+  const qSing = normSingular(qNorm);
+  const isExactSynonym = Object.keys(SYNONYMS).some(syn => {
+    const sn = norm(syn); const ss = normSingular(sn);
+    return sn === qNorm || ss === qNorm || sn === qSing || ss === qSing;
+  });
+
+  if (!isExactSynonym) {
+    // Direct scoring against items
+    for (const item of ITEMS) {
+      const s = score(query, item);
+      if (s && s.score >= 40) {
+        const key = item.item + '|' + item.section;
+        if (!seen.has(key)) {
+          seen.add(key);
+          results.push({ item, score: s.score, matchType: s.type, icon: s.icon, synonymUsed: null });
+        }
       }
     }
   }
@@ -534,7 +546,13 @@ function search(query) {
       // Match target against item name (exact substring or singular form)
       // norm() the target so hyphens/punctuation in target strings don't break matching
       const normTarget = norm(target);
-      if (itemLower.includes(normTarget) || itemSingLower.includes(normTarget) || normTarget.includes(itemSingLower)) {
+      // Use whole-word boundary matching to prevent e.g. "locks" matching "clocks"
+      function wordMatch(haystack, needle) {
+        if (haystack === needle) return true;
+        const re = new RegExp('(?:^|\\s)' + needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:\\s|$)');
+        return re.test(haystack);
+      }
+      if (wordMatch(itemLower, normTarget) || wordMatch(itemSingLower, normTarget) || normTarget.includes(itemSingLower)) {
         const key = item.item + '|' + item.section;
         if (!seen.has(key)) {
           // Score synonym hits: exact target match = 85, partial = 70
